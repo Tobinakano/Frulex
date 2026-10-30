@@ -1,9 +1,13 @@
 import { Link, Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import Cart from "./pages/Cart";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminDashboard from "./pages/AdminDashboard";
+import Carrito from "./pages/Carrito";
+import Catalogo from "./pages/Catalogo";
 import Checkout from "./pages/Checkout";
+import EmpleadoDashboard from "./pages/EmpleadoDashboard";
+import GerenteDashboard from "./pages/GerenteDashboard";
 import Login from "./pages/Login";
-import Products from "./pages/Products";
 import Register from "./pages/Register";
 
 function Home() {
@@ -11,5 +15,5 @@ function Home() {
 }
 
 export default function App() {
-  return <><Navbar /><Routes><Route path="/" element={<Home />} /><Route path="/productos" element={<Products />} /><Route path="/login" element={<Login />} /><Route path="/registro" element={<Register />} /><Route path="/carrito" element={<Cart />} /><Route path="/checkout" element={<Checkout />} /></Routes></>;
+  return <><Navbar /><Routes><Route path="/" element={<Home />} /><Route path="/productos" element={<Catalogo />} /><Route path="/catalogo" element={<Catalogo />} /><Route path="/login" element={<Login />} /><Route path="/registro" element={<Register />} /><Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute>} /><Route path="/gerente" element={<ProtectedRoute allowedRoles={["gerente"]}><GerenteDashboard /></ProtectedRoute>} /><Route path="/empleado" element={<ProtectedRoute allowedRoles={["empleado"]}><EmpleadoDashboard /></ProtectedRoute>} /><Route path="/carrito" element={<ProtectedRoute allowedRoles={["cliente"]}><Carrito /></ProtectedRoute>} /><Route path="/checkout" element={<ProtectedRoute allowedRoles={["cliente"]}><Checkout /></ProtectedRoute>} /></Routes></>;
 }

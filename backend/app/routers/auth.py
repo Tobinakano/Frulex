@@ -64,6 +64,7 @@ def registrar_usuario(datos: RegistroUsuario, db: Session = Depends(get_db)) -> 
         nombre=datos.nombre.strip(),
         correo=str(datos.correo).lower(),
         hashed_password=pwd_context.hash(datos.password),
+        rol="cliente",
     )
     db.add(usuario)
     db.commit()

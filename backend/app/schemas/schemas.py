@@ -20,6 +20,7 @@ class UsuarioRespuesta(BaseModel):
     id: int
     nombre: str
     correo: EmailStr
+    rol: str
 
 
 class TokenRespuesta(BaseModel):

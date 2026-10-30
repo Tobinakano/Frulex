@@ -14,6 +14,7 @@ export function AuthProvider({ children }) {
     localStorage.setItem("frulex_token", data.access_token);
     localStorage.setItem("frulex_user", JSON.stringify(data.usuario));
     setUser(data.usuario);
+    return data.usuario;
   };
 
   const logout = () => {

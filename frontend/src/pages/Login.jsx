@@ -10,7 +10,15 @@ export default function Login() {
 
   const submit = async (event) => {
     event.preventDefault();
-    try { await login(form.correo, form.password); navigate("/productos"); }
+    try {
+      const user = await login(form.correo, form.password);
+      const destinations = {
+        admin: "/admin",
+        gerente: "/gerente",
+        empleado: "/empleado",
+      };
+      navigate(destinations[user.rol] || "/catalogo");
+    }
     catch { setError("Correo o contraseña incorrectos."); }
   };
 
