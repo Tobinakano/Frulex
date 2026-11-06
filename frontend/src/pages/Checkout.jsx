@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { CheckCircle2, CreditCard, MapPin } from "lucide-react";
+import DireccionSelector from "../components/DireccionSelector";
+import SucursalSelector from "../components/SucursalSelector";
 import { useCart } from "../context/CartContext";
+import { useSucursal } from "../context/SucursalContext";
 import api from "../services/api";
 
 export default function Checkout() {
   const { items, total, clearCart } = useCart();
+  const { sucursalActiva } = useSucursal();
   const [direccionEntrega, setDireccionEntrega] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Pago contra entrega");
   const [status, setStatus] = useState({
@@ -67,6 +71,16 @@ export default function Checkout() {
 
   const submit = async (event) => {
     event.preventDefault();
+    if (direccionEntrega.trim().length < 3) {
+      setStatus({
+        loading: false,
+        error: "Selecciona o escribe una dirección de entrega.",
+        confirmed: false,
+        orderId: null,
+        confirmedTotal: null,
+      });
+      return;
+    }
     setStatus({ loading: true, error: "", confirmed: false, orderId: null, confirmedTotal: null });
     try {
       const { data } = await api.post("/checkout/", {
@@ -78,6 +92,7 @@ export default function Checkout() {
         })),
         direccion_entrega: direccionEntrega.trim(),
         metodo_pago: paymentMethod,
+        sucursal_id: sucursalActiva?.id ?? null,
         total: Number(total.toFixed(2)),
       });
       clearCart();
@@ -116,18 +131,21 @@ export default function Checkout() {
           onSubmit={submit}
         >
           <div>
-            <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-800">
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-gray-800">
+              <MapPin size={16} className="text-brand-600" />
+              <span>Sucursal de despacho</span>
+            </p>
+            <div className="mt-2">
+              <SucursalSelector variant="full" />
+            </div>
+          </div>
+
+          <div>
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-gray-800">
               <MapPin size={16} className="text-brand-600" />
               <span>Dirección de entrega</span>
-            </label>
-            <input
-              required
-              minLength={3}
-              value={direccionEntrega}
-              onChange={(e) => setDireccionEntrega(e.target.value)}
-              placeholder="Ej: Calle 15 # 120-34, Cali"
-              className="mt-2 w-full rounded-xl border border-gray-200 p-3 text-sm focus:border-brand-500 focus:outline-none"
-            />
+            </p>
+            <DireccionSelector onChange={setDireccionEntrega} />
           </div>
 
           <div>

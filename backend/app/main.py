@@ -7,8 +7,11 @@ from sqlalchemy import inspect, text
 from app.core.database import Base, SessionLocal, engine
 from app.core.seed import seed_data
 from app.routers.auth import router as auth_router
+from app.routers.carrito_b2b import router as carrito_b2b_router
 from app.routers.checkout import router as checkout_router
+from app.routers.direcciones import router as direcciones_router
 from app.routers.products import router as products_router
+from app.routers.sucursales import router as sucursales_router
 
 
 @asynccontextmanager
@@ -18,6 +21,17 @@ async def lifespan(_: FastAPI):
         with engine.begin() as connection:
             connection.execute(
                 text("ALTER TABLE usuarios ADD COLUMN rol VARCHAR(20) NOT NULL DEFAULT 'cliente'")
+            )
+    # Columnas nuevas de "pedidos" (create_all no altera tablas ya existentes).
+    columnas_pedidos = {column["name"] for column in inspect(engine).get_columns("pedidos")}
+    with engine.begin() as connection:
+        if "sucursal_id" not in columnas_pedidos:
+            connection.execute(
+                text("ALTER TABLE pedidos ADD COLUMN sucursal_id INTEGER REFERENCES sucursales(id)")
+            )
+        if "tipo" not in columnas_pedidos:
+            connection.execute(
+                text("ALTER TABLE pedidos ADD COLUMN tipo VARCHAR(20) NOT NULL DEFAULT 'minorista'")
             )
     db = None
     try:
@@ -49,6 +63,9 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/api")
 app.include_router(products_router, prefix="/api")
 app.include_router(checkout_router, prefix="/api")
+app.include_router(sucursales_router, prefix="/api")
+app.include_router(direcciones_router, prefix="/api")
+app.include_router(carrito_b2b_router, prefix="/api")
 
 
 @app.get("/health", tags=["Sistema"])

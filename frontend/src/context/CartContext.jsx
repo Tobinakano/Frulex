@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
+import { useSucursal } from "./SucursalContext";
+
 const CartContext = createContext(null);
 
 function readStoredItems() {
@@ -12,11 +14,25 @@ function readStoredItems() {
 }
 
 export function CartProvider({ children }) {
-  const [items, setItems] = useState(readStoredItems);
+  const { ofertasPorProducto } = useSucursal();
+  const [storedItems, setItems] = useState(readStoredItems);
 
   useEffect(() => {
-    localStorage.setItem("frulex_cart", JSON.stringify(items));
-  }, [items]);
+    localStorage.setItem("frulex_cart", JSON.stringify(storedItems));
+  }, [storedItems]);
+
+  // Lo guardado conserva el precio de catálogo; el precio efectivo aplica la
+  // oferta vigente de la sucursal activa (el backend la aplica igual al pagar).
+  const items = useMemo(
+    () =>
+      storedItems.map((item) => {
+        const oferta = ofertasPorProducto[item.id];
+        return oferta
+          ? { ...item, precio_original: Number(item.precio), precio: oferta.precio_oferta, en_oferta: true }
+          : item;
+      }),
+    [storedItems, ofertasPorProducto],
+  );
 
   const addToCart = (product, quantity = 1) => {
     const safeQuantity = Math.max(1, Number(quantity) || 1);

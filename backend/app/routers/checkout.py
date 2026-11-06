@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from pydantic import BaseModel, Field
@@ -8,7 +8,8 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.models.models import DetallePedido, Pedido, Producto, Usuario
+from app.models.models import DetallePedido, Pedido, Producto, Sucursal, Usuario
+from app.routers.products import obtener_precios_oferta
 
 
 router = APIRouter(prefix="/checkout", tags=["Checkout"])
@@ -27,6 +28,7 @@ class CheckoutSolicitud(BaseModel):
     total: Decimal = Field(gt=0, decimal_places=2)
     direccion_entrega: str = Field(default="Entrega a domicilio", max_length=300)
     metodo_pago: str = Field(default="Pago contra entrega", max_length=80)
+    sucursal_id: int | None = None
 
 
 class CheckoutRespuesta(BaseModel):
@@ -61,12 +63,21 @@ def procesar_checkout(
     db: Session = Depends(get_db),
     usuario: Usuario | None = Depends(obtener_usuario_opcional),
 ) -> CheckoutRespuesta:
+    if datos.sucursal_id is not None:
+        sucursal = db.get(Sucursal, datos.sucursal_id)
+        if sucursal is None or not sucursal.activa:
+            raise HTTPException(status_code=404, detail="Sucursal no encontrada")
+    ofertas = obtener_precios_oferta(db, datos.sucursal_id)
+
     total_calculado = Decimal("0.00")
     detalles_crear: list[DetallePedido] = []
 
     for item in datos.productos:
         producto_bd = db.get(Producto, item.id)
-        precio_unitario = Decimal(producto_bd.precio) if producto_bd else Decimal(item.precio)
+        if producto_bd:
+            precio_unitario = ofertas.get(producto_bd.id, Decimal(producto_bd.precio))
+        else:
+            precio_unitario = Decimal(item.precio)
         nombre_prod = producto_bd.nombre if producto_bd else item.nombre
         subtotal = (precio_unitario * Decimal(item.cantidad)).quantize(Decimal("0.01"))
         total_calculado += subtotal
@@ -86,6 +97,7 @@ def procesar_checkout(
     try:
         pedido = Pedido(
             usuario_id=usuario.id if usuario else None,
+            sucursal_id=datos.sucursal_id,
             direccion_entrega=datos.direccion_entrega.strip() or "Entrega a domicilio",
             metodo_pago=datos.metodo_pago.strip() or "Pago contra entrega",
             total=total_calculado,

@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from app.models.models import Producto, Usuario
+from app.models.models import Oferta, Producto, Sucursal, Usuario
 from app.routers.auth import pwd_context
 
 
@@ -69,3 +69,39 @@ def seed_data(db: Session) -> None:
         )
         db.commit()
         print("Productos insertados", flush=True)
+
+    if not db.query(Sucursal).first():
+        db.add_all(
+            [
+                Sucursal(nombre="Frulex Centro", direccion="Calle 11 # 5-30", ciudad="Cali"),
+                Sucursal(nombre="Frulex Sur", direccion="Carrera 100 # 14-20", ciudad="Cali"),
+                Sucursal(nombre="Frulex Norte", direccion="Avenida 6N # 25-40", ciudad="Cali"),
+            ]
+        )
+        db.commit()
+        print("Sucursales insertadas", flush=True)
+
+    if not db.query(Oferta).first():
+        sucursales = {s.nombre: s for s in db.query(Sucursal).all()}
+        productos = {p.nombre: p for p in db.query(Producto).all()}
+        ofertas_demo = [
+            ("Frulex Centro", "Manzanas", "2.90"),
+            ("Frulex Centro", "Naranjas", "2.30"),
+            ("Frulex Sur", "Tomates", "1.99"),
+            ("Frulex Sur", "Cebollas", "1.50"),
+            ("Frulex Norte", "Manzanas", "2.95"),
+            ("Frulex Norte", "Tomates", "2.10"),
+        ]
+        nuevas = [
+            Oferta(
+                producto_id=productos[producto].id,
+                sucursal_id=sucursales[sucursal].id,
+                precio_oferta=Decimal(precio),
+            )
+            for sucursal, producto, precio in ofertas_demo
+            if sucursal in sucursales and producto in productos
+        ]
+        if nuevas:
+            db.add_all(nuevas)
+            db.commit()
+            print("Ofertas insertadas", flush=True)

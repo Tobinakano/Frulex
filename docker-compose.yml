@@ -8,14 +8,19 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-frulex}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-frulex}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - ./database/postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-frulex} -d ${POSTGRES_DB:-frulex}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-frulex} -d ${POSTGRES_DB:-frulex}",
+        ]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 30
+      start_period: 120s
 
   backend:
     build:

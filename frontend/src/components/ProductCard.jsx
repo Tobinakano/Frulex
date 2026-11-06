@@ -2,6 +2,7 @@ import { Check, Minus, Plus, ShoppingBasket, Store } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+import { useSucursal } from "../context/SucursalContext";
 
 const FALLBACK_IMAGES = {
   manzanas: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=800&q=80",
@@ -25,6 +26,8 @@ function resolveProductImage(product) {
 export default function ProductCard({ product, onRequireAuth }) {
   const { user } = useAuth();
   const { addToCart } = useCart();
+  const { ofertasPorProducto } = useSucursal();
+  const oferta = ofertasPorProducto[product.id];
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
 
@@ -56,6 +59,11 @@ export default function ProductCard({ product, onRequireAuth }) {
         <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-brand-700 shadow-sm backdrop-blur-sm">
           {product.categoria}
         </span>
+        {oferta && (
+          <span className="absolute right-3 top-3 rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white shadow-sm">
+            Oferta
+          </span>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col justify-between p-5">
@@ -73,9 +81,20 @@ export default function ProductCard({ product, onRequireAuth }) {
         <div className="mt-5 border-t border-gray-100 pt-4">
           <div className="flex items-baseline justify-between">
             <span className="text-xs font-medium text-gray-500">Precio</span>
-            <span className="text-xl font-extrabold text-gray-900">
-              ${Number(product.precio).toFixed(2)}
-            </span>
+            {oferta ? (
+              <span>
+                <span className="mr-2 text-sm font-medium text-gray-400 line-through">
+                  ${Number(product.precio).toFixed(2)}
+                </span>
+                <span className="text-xl font-extrabold text-red-600">
+                  ${oferta.precio_oferta.toFixed(2)}
+                </span>
+              </span>
+            ) : (
+              <span className="text-xl font-extrabold text-gray-900">
+                ${Number(product.precio).toFixed(2)}
+              </span>
+            )}
           </div>
 
           <div className="mt-3 flex items-center gap-2">
