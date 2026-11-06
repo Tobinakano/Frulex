@@ -1,1 +1,21 @@
+# Base de datos local
 database/postgres_data/
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Python / Backend
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Node / Frontend
+node_modules/
+dist/
+.vite/
+

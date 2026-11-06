@@ -1,14 +1,23 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function ProtectedRoute({ children, allowedRoles }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const location = useLocation();
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600" />
+      </div>
+    );
   }
 
-  if (user.rol !== "admin" && !allowedRoles.includes(user.rol)) {
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  }
+
+  if (allowedRoles && user.rol !== "admin" && !allowedRoles.includes(user.rol)) {
     return <Navigate to="/" replace />;
   }
 

@@ -3,7 +3,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models.models import Producto
+from app.models.models import Producto, Usuario
+from app.routers.auth import requerir_roles
 from app.schemas.schemas import ProductoCrear, ProductoRespuesta
 
 
@@ -30,7 +31,11 @@ def obtener_producto(producto_id: int, db: Session = Depends(get_db)) -> Product
 
 
 @router.post("/", response_model=ProductoRespuesta, status_code=status.HTTP_201_CREATED)
-def crear_producto(datos: ProductoCrear, db: Session = Depends(get_db)) -> Producto:
+def crear_producto(
+    datos: ProductoCrear,
+    db: Session = Depends(get_db),
+    _: Usuario = Depends(requerir_roles("admin", "gerente")),
+) -> Producto:
     producto = Producto(**datos.model_dump())
     db.add(producto)
     db.commit()

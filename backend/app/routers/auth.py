@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -18,12 +19,12 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
-def crear_token(usuario_id: int) -> str:
+def crear_token(usuario_id: int, rol: str = "cliente") -> str:
     expires_at = datetime.now(timezone.utc) + timedelta(
         minutes=settings.access_token_expire_minutes
     )
     return jwt.encode(
-        {"sub": str(usuario_id), "exp": expires_at},
+        {"sub": str(usuario_id), "rol": rol, "exp": expires_at},
         settings.secret_key,
         algorithm=settings.jwt_algorithm,
     )
@@ -55,14 +56,28 @@ def obtener_usuario_actual(
     return usuario
 
 
+def requerir_roles(*roles_permitidos: str) -> Callable[[Usuario], Usuario]:
+    def validador(usuario: Usuario = Depends(obtener_usuario_actual)) -> Usuario:
+        if usuario.rol != "admin" and usuario.rol not in roles_permitidos:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tienes permisos suficientes para realizar esta acción",
+            )
+        return usuario
+
+    return validador
+
+
 @router.post("/registro", response_model=UsuarioRespuesta, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=UsuarioRespuesta, status_code=status.HTTP_201_CREATED)
 def registrar_usuario(datos: RegistroUsuario, db: Session = Depends(get_db)) -> Usuario:
-    existente = db.scalar(select(Usuario).where(Usuario.correo == datos.correo))
+    correo_normalizado = str(datos.correo).strip().lower()
+    existente = db.scalar(select(Usuario).where(Usuario.correo == correo_normalizado))
     if existente:
         raise HTTPException(status_code=409, detail="Ya existe un usuario con ese correo")
     usuario = Usuario(
         nombre=datos.nombre.strip(),
-        correo=str(datos.correo).lower(),
+        correo=correo_normalizado,
         hashed_password=pwd_context.hash(datos.password),
         rol="cliente",
     )
@@ -74,10 +89,14 @@ def registrar_usuario(datos: RegistroUsuario, db: Session = Depends(get_db)) -> 
 
 @router.post("/login", response_model=TokenRespuesta)
 def iniciar_sesion(datos: LoginUsuario, db: Session = Depends(get_db)) -> TokenRespuesta:
-    usuario = db.scalar(select(Usuario).where(Usuario.correo == str(datos.correo).lower()))
+    correo_normalizado = str(datos.correo).strip().lower()
+    usuario = db.scalar(select(Usuario).where(Usuario.correo == correo_normalizado))
     if usuario is None or not pwd_context.verify(datos.password, usuario.hashed_password):
         raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos")
-    return TokenRespuesta(access_token=crear_token(usuario.id), usuario=usuario)
+    return TokenRespuesta(
+        access_token=crear_token(usuario.id, usuario.rol),
+        usuario=usuario,
+    )
 
 
 @router.get("/me", response_model=UsuarioRespuesta)

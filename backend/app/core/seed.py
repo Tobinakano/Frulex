@@ -17,19 +17,19 @@ def seed_data(db: Session) -> None:
             [
                 Usuario(
                     nombre="Admin",
-                    correo="nicolashdezrd@gmail.com",
+                    correo=os.getenv("SEED_ADMIN_EMAIL", "nicolashdezrd@gmail.com"),
                     hashed_password=pwd_context.hash(admin_pass),
                     rol="admin",
                 ),
                 Usuario(
                     nombre="Gerente",
-                    correo="jsmazuerae@correo.usbcali.edu.co",
+                    correo=os.getenv("SEED_GERENTE_EMAIL", "jsmazuerae@correo.usbcali.edu.co"),
                     hashed_password=pwd_context.hash(gerente_pass),
                     rol="gerente",
                 ),
                 Usuario(
                     nombre="Empleado",
-                    correo="jsmazuma@gmail.com",
+                    correo=os.getenv("SEED_EMPLEADO_EMAIL", "jsmazuma@gmail.com"),
                     hashed_password=pwd_context.hash(empleado_pass),
                     rol="empleado",
                 ),
@@ -45,25 +45,25 @@ def seed_data(db: Session) -> None:
                     nombre="Manzanas",
                     precio=Decimal("3.50"),
                     categoria="Frutas",
-                    imagen_url="https://placehold.co/600x400?text=Manzanas",
+                    imagen_url="https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=800&q=80",
                 ),
                 Producto(
                     nombre="Naranjas",
                     precio=Decimal("2.80"),
                     categoria="Frutas",
-                    imagen_url="https://placehold.co/600x400?text=Naranjas",
+                    imagen_url="https://images.unsplash.com/photo-1547514701-42782101795e?auto=format&fit=crop&w=800&q=80",
                 ),
                 Producto(
                     nombre="Tomates",
                     precio=Decimal("2.40"),
                     categoria="Verduras",
-                    imagen_url="https://placehold.co/600x400?text=Tomates",
+                    imagen_url="https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=800&q=80",
                 ),
                 Producto(
                     nombre="Cebollas",
                     precio=Decimal("1.90"),
                     categoria="Verduras",
-                    imagen_url="https://placehold.co/600x400?text=Cebollas",
+                    imagen_url="https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?auto=format&fit=crop&w=800&q=80",
                 ),
             ]
         )

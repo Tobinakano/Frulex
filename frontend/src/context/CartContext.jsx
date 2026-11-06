@@ -23,9 +23,11 @@ export function CartProvider({ children }) {
     setItems((current) => {
       const found = current.find((item) => item.id === product.id);
       if (found) {
-        return current.map((item) => item.id === product.id
-          ? { ...item, quantity: item.quantity + safeQuantity }
-          : item);
+        return current.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + safeQuantity }
+            : item,
+        );
       }
       return [...current, { ...product, quantity: safeQuantity }];
     });
@@ -41,16 +43,34 @@ export function CartProvider({ children }) {
       removeFromCart(productId);
       return;
     }
-    setItems((current) => current.map((item) => item.id === productId
-      ? { ...item, quantity: safeQuantity }
-      : item));
+    setItems((current) =>
+      current.map((item) =>
+        item.id === productId ? { ...item, quantity: safeQuantity } : item,
+      ),
+    );
   };
 
-  const clearCart = () => setItems([]);
-  const total = items.reduce((sum, item) => sum + Number(item.precio) * item.quantity, 0);
+  const clearCart = () => {
+    setItems([]);
+  };
+
+  const total = items.reduce(
+    (sum, item) => sum + Number(item.precio) * item.quantity,
+    0,
+  );
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+
   const value = useMemo(
-    () => ({ items, addToCart, removeFromCart, updateQuantity, clearCart, total }),
-    [items, total],
+    () => ({
+      items,
+      itemCount,
+      total,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+    }),
+    [items, itemCount, total],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
