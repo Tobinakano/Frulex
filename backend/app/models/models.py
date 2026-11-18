@@ -142,6 +142,7 @@ class ItemCarritoB2B(Base):
 
     carrito: Mapped["CarritoB2B"] = relationship(back_populates="items")
     producto: Mapped["Producto"] = relationship()
+<<<<<<< HEAD
 
 
 class Carrito(Base):
@@ -197,3 +198,5 @@ class OrdenDespacho(Base):
 
     pedido: Mapped["Pedido"] = relationship()
     sucursal: Mapped["Sucursal"] = relationship()
+=======
+>>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba

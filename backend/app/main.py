@@ -7,10 +7,15 @@ from sqlalchemy import inspect, text
 from app.core.database import Base, SessionLocal, engine
 from app.core.seed import seed_data
 from app.routers.auth import router as auth_router
+<<<<<<< HEAD
 from app.routers.carrito import router as carrito_router
 from app.routers.carrito_b2b import router as carrito_b2b_router
 from app.routers.checkout import router as checkout_router
 from app.routers.despachos import router as despachos_router
+=======
+from app.routers.carrito_b2b import router as carrito_b2b_router
+from app.routers.checkout import router as checkout_router
+>>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba
 from app.routers.direcciones import router as direcciones_router
 from app.routers.products import router as products_router
 from app.routers.sucursales import router as sucursales_router
@@ -68,8 +73,11 @@ app.include_router(checkout_router, prefix="/api")
 app.include_router(sucursales_router, prefix="/api")
 app.include_router(direcciones_router, prefix="/api")
 app.include_router(carrito_b2b_router, prefix="/api")
+<<<<<<< HEAD
 app.include_router(carrito_router, prefix="/api")
 app.include_router(despachos_router, prefix="/api")
+=======
+>>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba
 
 
 @app.get("/health", tags=["Sistema"])

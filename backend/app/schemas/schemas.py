@@ -128,6 +128,7 @@ class ConfirmarB2BRespuesta(BaseModel):
     pedido_id: int
     mensaje: str
     total: Decimal
+<<<<<<< HEAD
 
 
 # --- CU-07 / CU-08: Carrito de compras (modificar cantidad, eliminar producto) ---
@@ -202,3 +203,5 @@ class OrdenDespachoRespuesta(BaseModel):
     items: list[ItemDespachoRespuesta]
     creado_en: datetime
     actualizado_en: datetime
+=======
+>>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba

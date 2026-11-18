@@ -9,7 +9,11 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.database import get_db
+<<<<<<< HEAD
 from app.models.models import Carrito, DetallePedido, Pedido, Producto, Sucursal, Usuario
+=======
+from app.models.models import DetallePedido, Pedido, Producto, Sucursal, Usuario
+>>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba
 from app.routers.products import obtener_precios_oferta
 
 

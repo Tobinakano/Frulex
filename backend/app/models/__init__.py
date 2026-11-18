@@ -1,4 +1,5 @@
 from app.models.models import (
+<<<<<<< HEAD
     Carrito,
     CarritoB2B,
     DetallePedido,
@@ -7,6 +8,13 @@ from app.models.models import (
     ItemCarritoB2B,
     Oferta,
     OrdenDespacho,
+=======
+    CarritoB2B,
+    DetallePedido,
+    Direccion,
+    ItemCarritoB2B,
+    Oferta,
+>>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba
     Pedido,
     Producto,
     Sucursal,
@@ -14,6 +22,7 @@ from app.models.models import (
 )
 
 __all__ = [
+<<<<<<< HEAD
     "Carrito",
     "CarritoB2B",
     "DetallePedido",
@@ -22,6 +31,13 @@ __all__ = [
     "ItemCarritoB2B",
     "Oferta",
     "OrdenDespacho",
+=======
+    "CarritoB2B",
+    "DetallePedido",
+    "Direccion",
+    "ItemCarritoB2B",
+    "Oferta",
+>>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba
     "Pedido",
     "Producto",
     "Sucursal",

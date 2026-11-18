@@ -3,6 +3,8 @@ import api from "../services/api";
 import { useAuth } from "./AuthContext";
 import { useSucursal } from "./SucursalContext";
 
+import { useSucursal } from "./SucursalContext";
+
 const CartContext = createContext(null);
 const OWNER_KEY = "frulex_cart_owner";
 
@@ -29,15 +31,19 @@ function readStoredItems() {
 
 export function CartProvider({ children }) {
   const { ofertasPorProducto } = useSucursal();
+<<<<<<< HEAD
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const previousUserId = useRef(userId);
+=======
+>>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba
   const [storedItems, setItems] = useState(readStoredItems);
 
   useEffect(() => {
     localStorage.setItem("frulex_cart", JSON.stringify(storedItems));
   }, [storedItems]);
 
+<<<<<<< HEAD
   // CU-07 / CU-08: con sesión iniciada el carrito vive en el servidor.
   // Lo guardado en el navegador es solo una copia para mostrarlo al instante.
   useEffect(() => {
@@ -101,6 +107,8 @@ export function CartProvider({ children }) {
     peticion().catch(recargarDesdeServidor);
   };
 
+=======
+>>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba
   // Lo guardado conserva el precio de catálogo; el precio efectivo aplica la
   // oferta vigente de la sucursal activa (el backend la aplica igual al pagar).
   const items = useMemo(
