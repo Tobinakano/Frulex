@@ -2,7 +2,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Leaf, LogOut, ShoppingCart, UserRound } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
-
+import SucursalSelector from "./SucursalSelector";
 const ROLE_LINKS = {
   admin: { path: "/admin", label: "Panel Admin" },
   gerente: { path: "/gerente", label: "Panel Gerente" },
@@ -23,7 +23,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-gray-200/80 bg-white/90 backdrop-blur-md">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+      <nav className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-y-3 px-6 py-4">
         <Link to="/" className="flex items-center gap-2.5 text-2xl font-extrabold tracking-tight text-brand-700">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-white shadow-sm shadow-brand-600/30">
             <Leaf size={20} />
@@ -31,7 +31,7 @@ export default function Navbar() {
           <span>Frulex</span>
         </Link>
 
-        <div className="flex items-center gap-6">
+        <div className="flex flex-wrap items-center justify-end gap-x-6 gap-y-2">
           <NavLink
             to="/"
             end
@@ -55,6 +55,30 @@ export default function Navbar() {
             Catálogo
           </NavLink>
 
+          <NavLink
+            to="/ofertas"
+            className={({ isActive }) =>
+              `text-sm font-medium transition ${
+                isActive ? "text-brand-700 font-semibold" : "text-gray-600 hover:text-brand-600"
+              }`
+            }
+          >
+            Ofertas
+          </NavLink>
+
+          {user && (user.rol === "cliente" || user.rol === "admin") && (
+            <NavLink
+              to="/carrito-b2b"
+              className={({ isActive }) =>
+                `text-sm font-medium transition ${
+                  isActive ? "text-brand-700 font-semibold" : "text-gray-600 hover:text-brand-600"
+                }`
+              }
+            >
+              Carrito B2B
+            </NavLink>
+          )}
+
           {roleLink && (
             <NavLink
               to={roleLink.path}
@@ -69,6 +93,8 @@ export default function Navbar() {
               {roleLink.label}
             </NavLink>
           )}
+
+          <SucursalSelector />
 
           <Link
             to="/carrito"

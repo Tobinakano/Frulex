@@ -4,11 +4,13 @@ import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminDashboard from "./pages/AdminDashboard";
 import Carrito from "./pages/Carrito";
+import CarritoB2B from "./pages/CarritoB2B";
 import Catalogo from "./pages/Catalogo";
 import Checkout from "./pages/Checkout";
 import EmpleadoDashboard from "./pages/EmpleadoDashboard";
 import GerenteDashboard from "./pages/GerenteDashboard";
 import Login from "./pages/Login";
+import Ofertas from "./pages/Ofertas";
 import Registro from "./pages/Registro";
 
 function Home() {
@@ -106,6 +108,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/productos" element={<Catalogo />} />
           <Route path="/catalogo" element={<Catalogo />} />
+          <Route path="/ofertas" element={<Ofertas />} />
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Registro />} />
           <Route path="/register" element={<Registro />} />
@@ -138,6 +141,14 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={["cliente"]}>
                 <Carrito />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/carrito-b2b"
+            element={
+              <ProtectedRoute allowedRoles={["cliente"]}>
+                <CarritoB2B />
               </ProtectedRoute>
             }
           />
