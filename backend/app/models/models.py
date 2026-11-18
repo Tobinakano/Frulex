@@ -13,6 +13,7 @@ class Usuario(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     nombre: Mapped[str] = mapped_column(String(120), nullable=False)
     correo: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    celular: Mapped[str | None] = mapped_column(String(30), nullable=True)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     rol: Mapped[str] = mapped_column(
         String(20),
@@ -29,13 +30,45 @@ class Producto(Base):
     nombre: Mapped[str] = mapped_column(String(160), nullable=False)
     precio: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     categoria: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    unidad: Mapped[str] = mapped_column(
+        String(40),
+        nullable=False,
+        default="libra",
+        server_default=text("'libra'"),
+    )
+    stock: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=100,
+        server_default=text("100"),
+    )
     imagen_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+
+class InventarioSucursal(Base):
+    __tablename__ = "inventarios_sucursal"
+    __table_args__ = (
+        UniqueConstraint("producto_id", "sucursal_id", name="uq_inventario_producto_sucursal"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    producto_id: Mapped[int] = mapped_column(ForeignKey("productos.id"), nullable=False, index=True)
+    sucursal_id: Mapped[int] = mapped_column(ForeignKey("sucursales.id"), nullable=False, index=True)
+    stock: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=50,
+        server_default=text("50"),
+    )
+
+    producto: Mapped["Producto"] = relationship()
 
 
 class Pedido(Base):
     __tablename__ = "pedidos"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    codigo_seguimiento: Mapped[str | None] = mapped_column(String(64), unique=True, index=True, nullable=True)
     usuario_id: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id"), nullable=True, index=True)
     sucursal_id: Mapped[int | None] = mapped_column(ForeignKey("sucursales.id"), nullable=True, index=True)
     tipo: Mapped[str] = mapped_column(
@@ -44,10 +77,17 @@ class Pedido(Base):
         default="minorista",
         server_default=text("'minorista'"),
     )
+    barrio: Mapped[str | None] = mapped_column(String(120), nullable=True)
     direccion_entrega: Mapped[str] = mapped_column(String(300), nullable=False, default="Entrega a domicilio")
-    metodo_pago: Mapped[str] = mapped_column(String(80), nullable=False, default="Pago contra entrega")
+    metodo_pago: Mapped[str] = mapped_column(String(80), nullable=False, default="Nequi")
+    costo_domicilio: Mapped[Decimal] = mapped_column(
+        Numeric(10, 2),
+        nullable=False,
+        default=Decimal("0.00"),
+        server_default=text("0.00"),
+    )
     total: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
-    estado: Mapped[str] = mapped_column(String(40), nullable=False, default="confirmado")
+    estado: Mapped[str] = mapped_column(String(60), nullable=False, default="Pendiente de despacho")
     creado_en: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -97,6 +137,12 @@ class Oferta(Base):
     producto_id: Mapped[int] = mapped_column(ForeignKey("productos.id"), nullable=False, index=True)
     sucursal_id: Mapped[int] = mapped_column(ForeignKey("sucursales.id"), nullable=False, index=True)
     precio_oferta: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    etiqueta: Mapped[str] = mapped_column(
+        String(80),
+        nullable=False,
+        default="Oferta por maduración",
+        server_default=text("'Oferta por maduración'"),
+    )
     activa: Mapped[bool] = mapped_column(
         Boolean,
         nullable=False,
@@ -113,6 +159,7 @@ class Direccion(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"), nullable=False, index=True)
     alias: Mapped[str] = mapped_column(String(60), nullable=False)
+    barrio: Mapped[str | None] = mapped_column(String(120), nullable=True)
     direccion: Mapped[str] = mapped_column(String(300), nullable=False)
     ciudad: Mapped[str] = mapped_column(String(100), nullable=False, default="Cali")
     referencia: Mapped[str | None] = mapped_column(String(200), nullable=True)
@@ -142,7 +189,6 @@ class ItemCarritoB2B(Base):
 
     carrito: Mapped["CarritoB2B"] = relationship(back_populates="items")
     producto: Mapped["Producto"] = relationship()
-<<<<<<< HEAD
 
 
 class Carrito(Base):
@@ -198,5 +244,3 @@ class OrdenDespacho(Base):
 
     pedido: Mapped["Pedido"] = relationship()
     sucursal: Mapped["Sucursal"] = relationship()
-=======
->>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba

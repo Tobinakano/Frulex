@@ -1,14 +1,10 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Flame, Leaf, LogOut, Package, ShoppingCart, Sparkles, UserRound } from "lucide-react";
+import { Flame, Leaf, LogOut, MapPin, Package, ShoppingCart, Sparkles, UserRound } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
-<<<<<<< HEAD
-import SucursalSelector from "./SucursalSelector";
-=======
 import { useSucursal } from "../context/SucursalContext";
 import SucursalSelector from "./SucursalSelector";
 
->>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba
 const ROLE_LINKS = {
   admin: { path: "/admin", label: "Panel Admin" },
   gerente: { path: "/gerente", label: "Panel Gerente" },
@@ -36,31 +32,27 @@ export default function Navbar() {
     }`;
 
   return (
-<<<<<<< HEAD
-    <header className="sticky top-0 z-40 border-b border-gray-200/80 bg-white/90 backdrop-blur-md">
-      <nav className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-y-3 px-6 py-4">
-        <Link to="/" className="flex items-center gap-2.5 text-2xl font-extrabold tracking-tight text-brand-700">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-white shadow-sm shadow-brand-600/30">
-            <Leaf size={20} />
-=======
-    <header className="sticky top-0 z-40 border-b border-brand-100/80 bg-white/90 shadow-soft backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-brand-100/80 bg-white/95 shadow-soft backdrop-blur-xl">
       <div className="border-b border-brand-100/60 bg-gradient-to-r from-brand-900 via-brand-800 to-emerald-900 px-4 py-1.5 text-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 text-[11px] font-medium sm:text-xs">
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1 rounded-full bg-brand-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-200 ring-1 ring-brand-400/30">
-              <Sparkles size={11} /> Cosecha del día
+              <Sparkles size={11} /> Fruver Multisede Cali
             </span>
             <span className="text-brand-50">
-              Frutas y verduras seleccionadas con envío a domicilio gratis.
+              Frutas y verduras frescas por libra · Domicilio Express en Cali.
             </span>
           </div>
-          <div className="hidden items-center gap-3 text-brand-100 sm:flex">
+          <div className="hidden items-center gap-2 text-brand-100 sm:flex">
+            <MapPin size={12} className="text-brand-300" />
             {sucursalActiva ? (
               <span>
-                Sucursal activa: <strong className="text-white">{sucursalActiva.nombre}</strong> ({sucursalActiva.ciudad})
+                Sede activa: <strong className="text-white">{sucursalActiva.nombre}</strong> ({sucursalActiva.direccion})
               </span>
             ) : (
-              <span>Selecciona tu sucursal para ver ofertas locales</span>
+              <span className="text-amber-200 font-semibold">
+                Elige tu sede en Cali (Norte, Sur o Centro) para comprar
+              </span>
             )}
           </div>
         </div>
@@ -73,62 +65,24 @@ export default function Navbar() {
         >
           <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-md shadow-brand-600/25 transition-transform duration-200 group-hover:scale-105">
             <Leaf size={21} />
->>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba
           </span>
           <div className="flex flex-col">
             <span className="leading-none">Frulex</span>
             <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-widest text-brand-600">
-              Mercado Fresco
+              Fruver Cali
             </span>
           </div>
         </Link>
 
-<<<<<<< HEAD
-        <div className="flex flex-wrap items-center justify-end gap-x-6 gap-y-2">
-          <NavLink
-            to="/"
-            end
-            className={({ isActive }) =>
-              `hidden text-sm font-medium transition sm:inline-block ${
-                isActive ? "text-brand-700 font-semibold" : "text-gray-600 hover:text-brand-600"
-              }`
-            }
-          >
-            Inicio
-=======
         <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-2 sm:gap-x-3">
           <NavLink to="/" end className={navLinkClass}>
             <span>Inicio</span>
->>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba
           </NavLink>
 
           <NavLink to="/catalogo" className={navLinkClass}>
             <span>Catálogo</span>
           </NavLink>
 
-<<<<<<< HEAD
-          <NavLink
-            to="/ofertas"
-            className={({ isActive }) =>
-              `text-sm font-medium transition ${
-                isActive ? "text-brand-700 font-semibold" : "text-gray-600 hover:text-brand-600"
-              }`
-            }
-          >
-            Ofertas
-          </NavLink>
-
-          {user && (user.rol === "cliente" || user.rol === "admin") && (
-            <NavLink
-              to="/carrito-b2b"
-              className={({ isActive }) =>
-                `text-sm font-medium transition ${
-                  isActive ? "text-brand-700 font-semibold" : "text-gray-600 hover:text-brand-600"
-                }`
-              }
-            >
-              Carrito B2B
-=======
           <NavLink to="/ofertas" className={navLinkClass}>
             <Flame size={15} className="text-harvest-500" />
             <span>Ofertas</span>
@@ -143,7 +97,6 @@ export default function Navbar() {
             <NavLink to="/carrito-b2b" className={navLinkClass}>
               <Package size={15} className="text-brand-600" />
               <span>Carrito B2B</span>
->>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba
             </NavLink>
           )}
 
@@ -162,11 +115,8 @@ export default function Navbar() {
             </NavLink>
           )}
 
-<<<<<<< HEAD
-=======
           <div className="hidden h-5 w-px bg-gray-200 md:block" />
 
->>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba
           <SucursalSelector />
 
           <Link

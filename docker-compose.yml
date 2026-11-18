@@ -15,11 +15,7 @@ services:
       test:
         [
           "CMD-SHELL",
-<<<<<<< HEAD
           "pg_isready -h 127.0.0.1 -U ${POSTGRES_USER:-frulex} -d ${POSTGRES_DB:-frulex}",
-=======
-          "pg_isready -U ${POSTGRES_USER:-frulex} -d ${POSTGRES_DB:-frulex}",
->>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba
         ]
       interval: 5s
       timeout: 5s

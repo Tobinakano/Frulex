@@ -115,6 +115,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     localStorage.removeItem("frulex_token");
     localStorage.removeItem("frulex_user");
+    api.post("/auth/logout").catch(() => {});
     setUser(null);
   };
 

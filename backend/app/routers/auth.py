@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -16,7 +16,7 @@ from app.schemas.schemas import LoginUsuario, RegistroUsuario, TokenRespuesta, U
 
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
 
 def crear_token(usuario_id: int, rol: str = "cliente") -> str:
@@ -31,7 +31,8 @@ def crear_token(usuario_id: int, rol: str = "cliente") -> str:
 
 
 def obtener_usuario_actual(
-    token: str = Depends(oauth2_scheme),
+    token: str | None = Depends(oauth2_scheme),
+    cookie_token: str | None = Cookie(default=None, alias="frulex_access_token"),
     db: Session = Depends(get_db),
 ) -> Usuario:
     credentials_error = HTTPException(
@@ -39,9 +40,12 @@ def obtener_usuario_actual(
         detail="Token inválido o expirado",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    effective_token = token or cookie_token
+    if not effective_token:
+        raise credentials_error
     try:
         payload = jwt.decode(
-            token,
+            effective_token,
             settings.secret_key,
             algorithms=[settings.jwt_algorithm],
         )
@@ -78,6 +82,7 @@ def registrar_usuario(datos: RegistroUsuario, db: Session = Depends(get_db)) -> 
     usuario = Usuario(
         nombre=datos.nombre.strip(),
         correo=correo_normalizado,
+        celular=(datos.celular or "").strip() or None,
         hashed_password=pwd_context.hash(datos.password),
         rol="cliente",
     )
@@ -88,15 +93,33 @@ def registrar_usuario(datos: RegistroUsuario, db: Session = Depends(get_db)) -> 
 
 
 @router.post("/login", response_model=TokenRespuesta)
-def iniciar_sesion(datos: LoginUsuario, db: Session = Depends(get_db)) -> TokenRespuesta:
+def iniciar_sesion(
+    datos: LoginUsuario,
+    response: Response,
+    db: Session = Depends(get_db),
+) -> TokenRespuesta:
     correo_normalizado = str(datos.correo).strip().lower()
     usuario = db.scalar(select(Usuario).where(Usuario.correo == correo_normalizado))
     if usuario is None or not pwd_context.verify(datos.password, usuario.hashed_password):
         raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos")
+    token = crear_token(usuario.id, usuario.rol)
+    response.set_cookie(
+        key="frulex_access_token",
+        value=token,
+        httponly=True,
+        samesite="lax",
+        max_age=settings.access_token_expire_minutes * 60,
+    )
     return TokenRespuesta(
-        access_token=crear_token(usuario.id, usuario.rol),
+        access_token=token,
         usuario=usuario,
     )
+
+
+@router.post("/logout", status_code=status.HTTP_200_OK)
+def cerrar_sesion(response: Response) -> dict[str, str]:
+    response.delete_cookie(key="frulex_access_token")
+    return {"mensaje": "Sesión cerrada"}
 
 
 @router.get("/me", response_model=UsuarioRespuesta)

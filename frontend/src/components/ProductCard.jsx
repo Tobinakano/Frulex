@@ -1,13 +1,20 @@
-import { Check, Flame, Minus, Plus, ShoppingBasket, Sparkles, Store } from "lucide-react";
+import { AlertTriangle, Check, Flame, Minus, PackageCheck, Plus, ShoppingBasket, Sparkles, Store } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { useSucursal } from "../context/SucursalContext";
+import { formatCOP } from "../services/api";
 
 const FALLBACK_IMAGES = {
+  sandía: "https://images.unsplash.com/photo-1587049352847-4a222e784d38?auto=format&fit=crop&w=900&q=80",
+  sandia: "https://images.unsplash.com/photo-1587049352847-4a222e784d38?auto=format&fit=crop&w=900&q=80",
+  tomate: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=900&q=80",
+  granadilla: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=900&q=80",
+  zanahoria: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&w=900&q=80",
+  papa: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=900&q=80",
+  coliflor: "https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?auto=format&fit=crop&w=900&q=80",
   manzanas: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=800&q=80",
   naranjas: "https://images.unsplash.com/photo-1547514701-42782101795e?auto=format&fit=crop&w=800&q=80",
-  tomates: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=800&q=80",
   cebollas: "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?auto=format&fit=crop&w=800&q=80",
 };
 
@@ -23,39 +30,48 @@ function resolveProductImage(product) {
   return url;
 }
 
-export default function ProductCard({ product, onRequireAuth }) {
+export default function ProductCard({ product, onRequireAuth, onRequireSucursal }) {
   const { user } = useAuth();
   const { addToCart } = useCart();
-<<<<<<< HEAD
-  const { ofertasPorProducto } = useSucursal();
-=======
   const { ofertasPorProducto, sucursalActiva } = useSucursal();
->>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba
   const oferta = ofertasPorProducto[product.id];
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const [branchWarning, setBranchWarning] = useState(false);
 
   const imageUrl = resolveProductImage(product);
+  const unidad = product.unidad || "libra";
+  const stockDisponible = Number(oferta?.stock ?? product.stock ?? 50);
+  const sinStock = stockDisponible <= 0;
 
   const precioOriginal = Number(product.precio);
+  const precioOferta = oferta ? Number(oferta.precio_oferta) : null;
   const descuentoPct =
     oferta && precioOriginal > 0
-      ? Math.round(((precioOriginal - oferta.precio_oferta) / precioOriginal) * 100)
+      ? Math.round(((precioOriginal - precioOferta) / precioOriginal) * 100)
       : 0;
+  const etiquetaOferta = oferta?.etiqueta || product.etiqueta_oferta || "Oferta por maduración";
 
   const addProduct = () => {
     if (!user) {
       if (onRequireAuth) onRequireAuth();
       return;
     }
-    addToCart(product, quantity);
+    if (!sucursalActiva) {
+      setBranchWarning(true);
+      setTimeout(() => setBranchWarning(false), 3200);
+      if (onRequireSucursal) onRequireSucursal();
+      return;
+    }
+    if (sinStock) return;
+    addToCart({ ...product, stock: stockDisponible, unidad }, Math.min(stockDisponible, quantity));
     setQuantity(1);
     setAdded(true);
     setTimeout(() => setAdded(false), 1400);
   };
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-3xl border border-gray-200/75 bg-white shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:border-brand-300/80 hover:shadow-elevated">
+    <article className="group relative flex flex-col overflow-hidden rounded-3xl border border-gray-200/80 bg-white shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:border-brand-300/80 hover:shadow-elevated">
       <div className="relative h-52 w-full overflow-hidden bg-gradient-to-br from-brand-50 via-cream-50 to-brand-100/50">
         {imageUrl ? (
           <img
@@ -66,25 +82,38 @@ export default function ProductCard({ product, onRequireAuth }) {
         ) : (
           <div className="flex h-full items-center justify-center text-5xl">🍎</div>
         )}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-60 transition-opacity group-hover:opacity-40" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-60 transition-opacity group-hover:opacity-40" />
 
         <span className="absolute left-3.5 top-3.5 inline-flex items-center gap-1 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-brand-800 shadow-sm ring-1 ring-black/5 backdrop-blur-md">
           <Sparkles size={11} className="text-brand-600" />
           {product.categoria}
         </span>
-<<<<<<< HEAD
-        {oferta && (
-          <span className="absolute right-3 top-3 rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white shadow-sm">
-            Oferta
-=======
 
         {oferta && (
           <span className="absolute right-3.5 top-3.5 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-rose-600 to-red-500 px-3 py-1 text-xs font-extrabold text-white shadow-md">
             <Flame size={12} />
             <span>Oferta{descuentoPct > 0 ? ` -${descuentoPct}%` : ""}</span>
->>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba
           </span>
         )}
+
+        <div className="absolute bottom-3 left-3.5 right-3.5 flex items-center justify-between gap-2">
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold shadow-sm backdrop-blur-md ${
+              sinStock
+                ? "bg-red-600/90 text-white"
+                : "bg-white/95 text-brand-800 ring-1 ring-black/5"
+            }`}
+          >
+            <PackageCheck size={12} className={sinStock ? "text-white" : "text-brand-600"} />
+            <span>{sinStock ? "Agotado" : `${stockDisponible} ${unidad}s disp.`}</span>
+          </span>
+
+          {oferta && (
+            <span className="truncate rounded-full bg-harvest-100/95 px-2.5 py-0.5 text-[10px] font-extrabold text-harvest-700 shadow-sm backdrop-blur-md">
+              {etiquetaOferta}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col justify-between p-5">
@@ -92,64 +121,59 @@ export default function ProductCard({ product, onRequireAuth }) {
           <div className="flex items-center justify-between gap-2 text-xs font-medium text-gray-500">
             <span className="inline-flex items-center gap-1.5">
               <Store size={13} className="text-brand-600" />
-              <span>{sucursalActiva ? sucursalActiva.nombre : "Disponible en tienda"}</span>
+              <span>{sucursalActiva ? sucursalActiva.nombre : "Disponible en Cali"}</span>
             </span>
-            <span className="rounded-md bg-brand-50 px-2 py-0.5 text-[11px] font-semibold text-brand-700">
-              Fresco
+            <span className="rounded-md bg-brand-50 px-2 py-0.5 text-[11px] font-bold text-brand-700">
+              Por {unidad}
             </span>
           </div>
 
-          <h2 className="mt-2 text-lg font-extrabold tracking-tight text-gray-900 group-hover:text-brand-700 transition-colors">
+          <h2 className="mt-2 text-lg font-extrabold tracking-tight text-gray-900 transition-colors group-hover:text-brand-700">
             {product.nombre}
           </h2>
           <p className="mt-1 text-xs leading-relaxed text-gray-500">
-            Producto fresco seleccionado · Venta por unidad / kg
+            Producto fresco seleccionado del campo · Venta por {unidad}
           </p>
         </div>
 
         <div className="mt-5 border-t border-gray-100 pt-4">
           <div className="flex items-baseline justify-between">
-<<<<<<< HEAD
-            <span className="text-xs font-medium text-gray-500">Precio</span>
-            {oferta ? (
-              <span>
-                <span className="mr-2 text-sm font-medium text-gray-400 line-through">
-                  ${Number(product.precio).toFixed(2)}
-                </span>
-                <span className="text-xl font-extrabold text-red-600">
-                  ${oferta.precio_oferta.toFixed(2)}
-                </span>
-              </span>
-            ) : (
-              <span className="text-xl font-extrabold text-gray-900">
-                ${Number(product.precio).toFixed(2)}
-=======
             <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-              Precio
+              Precio / {unidad}
             </span>
             {oferta ? (
               <div className="flex items-baseline gap-2">
                 <span className="text-sm font-medium text-gray-400 line-through">
-                  ${precioOriginal.toFixed(2)}
+                  {formatCOP(precioOriginal)}
                 </span>
                 <span className="text-2xl font-extrabold tracking-tight text-rose-600">
-                  ${oferta.precio_oferta.toFixed(2)}
+                  {formatCOP(precioOferta)}
                 </span>
               </div>
             ) : (
-              <span className="text-2xl font-extrabold tracking-tight text-gray-900">
-                ${precioOriginal.toFixed(2)}
->>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba
-              </span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-extrabold tracking-tight text-gray-900">
+                  {formatCOP(precioOriginal)}
+                </span>
+                <span className="text-xs font-semibold text-gray-500">/ {unidad}</span>
+              </div>
             )}
           </div>
+
+          {branchWarning && (
+            <div className="mt-2.5 flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[11px] font-bold text-amber-800">
+              <AlertTriangle size={13} className="shrink-0 text-amber-600" />
+              <span>Elige primero una sucursal en Cali para agregar al carrito.</span>
+            </div>
+          )}
 
           <div className="mt-3.5 flex items-center gap-2.5">
             <div className="flex items-center rounded-2xl border border-gray-200 bg-cream-50/70 p-0.5">
               <button
                 type="button"
+                disabled={sinStock}
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                className="flex h-9 w-8 items-center justify-center rounded-xl text-gray-600 transition hover:bg-white hover:text-brand-700 hover:shadow-sm"
+                className="flex h-9 w-8 items-center justify-center rounded-xl text-gray-600 transition hover:bg-white hover:text-brand-700 hover:shadow-sm disabled:opacity-40"
                 aria-label="Disminuir cantidad"
               >
                 <Minus size={14} />
@@ -158,15 +182,25 @@ export default function ProductCard({ product, onRequireAuth }) {
                 id={`quantity-${product.id}`}
                 type="number"
                 min="1"
+                max={stockDisponible}
+                disabled={sinStock}
                 value={quantity}
-                onChange={(event) => setQuantity(Math.max(1, Number(event.target.value) || 1))}
-                className="w-9 bg-transparent text-center text-sm font-bold text-gray-900 focus:outline-none"
-                aria-label={`Cantidad de ${product.nombre}`}
+                onChange={(event) =>
+                  setQuantity(
+                    Math.min(
+                      Math.max(1, stockDisponible),
+                      Math.max(1, Number(event.target.value) || 1),
+                    ),
+                  )
+                }
+                className="w-10 bg-transparent text-center text-sm font-bold text-gray-900 focus:outline-none"
+                aria-label={`Cantidad en libras de ${product.nombre}`}
               />
               <button
                 type="button"
-                onClick={() => setQuantity((q) => q + 1)}
-                className="flex h-9 w-8 items-center justify-center rounded-xl text-gray-600 transition hover:bg-white hover:text-brand-700 hover:shadow-sm"
+                disabled={sinStock || quantity >= stockDisponible}
+                onClick={() => setQuantity((q) => Math.min(stockDisponible, q + 1))}
+                className="flex h-9 w-8 items-center justify-center rounded-xl text-gray-600 transition hover:bg-white hover:text-brand-700 hover:shadow-sm disabled:opacity-40"
                 aria-label="Aumentar cantidad"
               >
                 <Plus size={14} />
@@ -175,8 +209,9 @@ export default function ProductCard({ product, onRequireAuth }) {
 
             <button
               type="button"
+              disabled={sinStock}
               onClick={addProduct}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-2xl px-3.5 py-2.5 text-sm font-bold text-white shadow-sm transition-all ${
+              className={`flex flex-1 items-center justify-center gap-2 rounded-2xl px-3.5 py-2.5 text-sm font-bold text-white shadow-sm transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
                 added
                   ? "bg-emerald-700 ring-2 ring-emerald-500/30"
                   : "bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 hover:shadow-md active:scale-[0.98]"

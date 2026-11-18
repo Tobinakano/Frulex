@@ -3,8 +3,6 @@ import api from "../services/api";
 import { useAuth } from "./AuthContext";
 import { useSucursal } from "./SucursalContext";
 
-import { useSucursal } from "./SucursalContext";
-
 const CartContext = createContext(null);
 const OWNER_KEY = "frulex_cart_owner";
 
@@ -31,28 +29,22 @@ function readStoredItems() {
 
 export function CartProvider({ children }) {
   const { ofertasPorProducto } = useSucursal();
-<<<<<<< HEAD
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const previousUserId = useRef(userId);
-=======
->>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba
   const [storedItems, setItems] = useState(readStoredItems);
 
   useEffect(() => {
     localStorage.setItem("frulex_cart", JSON.stringify(storedItems));
   }, [storedItems]);
 
-<<<<<<< HEAD
-  // CU-07 / CU-08: con sesión iniciada el carrito vive en el servidor.
-  // Lo guardado en el navegador es solo una copia para mostrarlo al instante.
+  // CU-07 / CU-08: con sesión iniciada el carrito vive en el servidor y se respalda en LocalStorage.
   useEffect(() => {
     const anterior = previousUserId.current;
     previousUserId.current = userId;
 
     if (!userId) {
       if (anterior) {
-        // Cierre de sesión: el carrito pertenece al usuario, no al navegador.
         setItems([]);
         localStorage.removeItem(OWNER_KEY);
       }
@@ -65,7 +57,6 @@ export function CartProvider({ children }) {
         const { data } = await api.get("/carrito/");
         let serverItems = fromServer(data);
         const local = readStoredItems();
-        // Carrito anterior guardado solo en el navegador: se migra una única vez.
         if (
           serverItems.length === 0 &&
           local.length > 0 &&
@@ -101,14 +92,11 @@ export function CartProvider({ children }) {
     }
   };
 
-  // Envía el cambio al servidor; si falla, se vuelve a cargar el carrito real.
   const sincronizar = (peticion) => {
     if (!userId) return;
     peticion().catch(recargarDesdeServidor);
   };
 
-=======
->>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba
   // Lo guardado conserva el precio de catálogo; el precio efectivo aplica la
   // oferta vigente de la sucursal activa (el backend la aplica igual al pagar).
   const items = useMemo(
@@ -116,7 +104,14 @@ export function CartProvider({ children }) {
       storedItems.map((item) => {
         const oferta = ofertasPorProducto[item.id];
         return oferta
-          ? { ...item, precio_original: Number(item.precio), precio: oferta.precio_oferta, en_oferta: true }
+          ? {
+              ...item,
+              precio_original: Number(item.precio),
+              precio: oferta.precio_oferta,
+              en_oferta: true,
+              etiqueta_oferta: oferta.etiqueta || "Oferta por maduración",
+              stock: oferta.stock ?? item.stock,
+            }
           : item;
       }),
     [storedItems, ofertasPorProducto],
@@ -124,16 +119,19 @@ export function CartProvider({ children }) {
 
   const addToCart = (product, quantity = 1) => {
     const safeQuantity = Math.max(1, Number(quantity) || 1);
+    const maxStock = Number(product.stock) > 0 ? Number(product.stock) : 9999;
+
     setItems((current) => {
       const found = current.find((item) => item.id === product.id);
       if (found) {
+        const nextQty = Math.min(maxStock, found.quantity + safeQuantity);
         return current.map((item) =>
           item.id === product.id
-            ? { ...item, quantity: item.quantity + safeQuantity }
+            ? { ...item, ...product, quantity: nextQty }
             : item,
         );
       }
-      return [...current, { ...product, quantity: safeQuantity }];
+      return [...current, { ...product, quantity: Math.min(maxStock, safeQuantity) }];
     });
     sincronizar(() => api.post("/carrito/items", { producto_id: product.id, cantidad: safeQuantity }));
   };
@@ -143,18 +141,23 @@ export function CartProvider({ children }) {
     sincronizar(() => api.delete(`/carrito/items/${productId}`));
   };
 
-  const updateQuantity = (productId, quantity) => {
+  const updateQuantity = (productId, quantity, maxStockLimit) => {
     const safeQuantity = Math.floor(Number(quantity));
     if (safeQuantity <= 0 || !Number.isFinite(safeQuantity)) {
       removeFromCart(productId);
       return;
     }
+    const currentItem = storedItems.find((i) => i.id === productId);
+    const limit =
+      Number(maxStockLimit ?? currentItem?.stock) > 0
+        ? Number(maxStockLimit ?? currentItem?.stock)
+        : 9999;
+    const clampedQuantity = Math.min(limit, safeQuantity);
+
     setItems((current) =>
-      current.map((item) =>
-        item.id === productId ? { ...item, quantity: safeQuantity } : item,
-      ),
+      current.map((item) => (item.id === productId ? { ...item, quantity: clampedQuantity } : item)),
     );
-    sincronizar(() => api.put(`/carrito/items/${productId}`, { cantidad: safeQuantity }));
+    sincronizar(() => api.put(`/carrito/items/${productId}`, { cantidad: clampedQuantity }));
   };
 
   const clearCart = () => {

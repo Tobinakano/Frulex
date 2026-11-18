@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Flame, Lock, MapPin, Search, Sparkles, Tag } from "lucide-react";
+import { AlertTriangle, Flame, Lock, MapPin, Search, Sparkles, Tag } from "lucide-react";
 import ProductCard from "../components/ProductCard";
 import SucursalSelector from "../components/SucursalSelector";
 import { useAuth } from "../context/AuthContext";
@@ -10,6 +10,7 @@ import api from "../services/api";
 export default function Catalogo() {
   const { user } = useAuth();
   const { sucursalActiva, ofertas } = useSucursal();
+  const sucursalId = sucursalActiva?.id ?? null;
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,18 +18,33 @@ export default function Catalogo() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todas");
   const [showAuthBanner, setShowAuthBanner] = useState(true);
+  const [showSucursalAlert, setShowSucursalAlert] = useState(false);
 
   useEffect(() => {
+    let active = true;
     setLoading(true);
+    const params = sucursalId ? { sucursal_id: sucursalId } : {};
     api
-      .get("/productos")
+      .get("/productos", { params })
       .then(({ data }) => {
+        if (!active) return;
         setProducts(data);
         setError("");
       })
-      .catch(() => setError("No se pudo cargar el catálogo de productos."))
-      .finally(() => setLoading(false));
-  }, []);
+      .catch(() => {
+        if (active) setError("No se pudo cargar el catálogo de productos.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [sucursalId]);
+
+  useEffect(() => {
+    if (sucursalActiva) setShowSucursalAlert(false);
+  }, [sucursalActiva]);
 
   const categories = useMemo(() => {
     const unique = Array.from(new Set(products.map((p) => p.categoria).filter(Boolean)));
@@ -52,6 +68,11 @@ export default function Catalogo() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleRequireSucursal = () => {
+    setShowSucursalAlert(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
       <div className="relative overflow-hidden rounded-4xl border border-brand-100/90 bg-white p-6 shadow-soft md:p-8">
@@ -59,7 +80,7 @@ export default function Catalogo() {
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3.5 py-1 text-xs font-bold text-brand-700 ring-1 ring-brand-200/70">
-                <Tag size={13} /> Catálogo público abierto
+                <Tag size={13} /> Catálogo público por libra (COP)
               </span>
               {sucursalActiva && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-harvest-50 px-3 py-1 text-xs font-bold text-harvest-700 ring-1 ring-harvest-200/80">
@@ -72,20 +93,47 @@ export default function Catalogo() {
               Catálogo de productos
             </h1>
             <p className="mt-1.5 max-w-2xl text-sm text-gray-600">
-              Consulta libremente nuestra variedad de frutas y verduras frescas disponibles para
-              entrega inmediata.
+              {sucursalActiva
+                ? `Consultando existencias reales y precios por libra en ${sucursalActiva.nombre} (${sucursalActiva.direccion}, ${sucursalActiva.ciudad}).`
+                : "Consulta libremente nuestra variedad de frutas y verduras frescas por libra en Cali."}
             </p>
           </div>
 
           <div className="w-full md:w-64">
             <p className="mb-1.5 flex items-center gap-1 text-xs font-bold text-gray-500">
               <MapPin size={12} className="text-brand-600" />
-              <span>Sucursal para precios y ofertas</span>
+              <span>Sede activa en Cali</span>
             </p>
             <SucursalSelector variant="full" />
           </div>
         </div>
       </div>
+
+      {showSucursalAlert && !sucursalActiva && (
+        <section
+          role="alert"
+          className="mt-6 flex items-center justify-between gap-4 rounded-3xl border border-amber-300 bg-amber-50 p-5 text-amber-900 shadow-soft"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white">
+              <AlertTriangle size={20} />
+            </div>
+            <div>
+              <h2 className="text-sm font-extrabold">
+                Selecciona una sucursal antes de agregar productos al carrito
+              </h2>
+              <p className="mt-0.5 text-xs text-amber-800">
+                Elige <strong>Sede Norte</strong>, <strong>Sede Sur</strong> o{" "}
+                <strong>Sede Centro</strong> en el selector superior para verificar existencias y
+                ofertas de tu zona en Cali.
+              </p>
+            </div>
+          </div>
+          <div className="w-52 shrink-0">
+            <SucursalSelector variant="full" />
+          </div>
+        </section>
+      )}
 
       {!user && showAuthBanner && (
         <section className="mt-6 overflow-hidden rounded-3xl border border-brand-200/90 bg-gradient-to-br from-brand-50/95 via-white to-cream-50 p-6 shadow-soft">
@@ -100,7 +148,7 @@ export default function Catalogo() {
                 </h2>
                 <p className="mt-1 text-sm text-gray-600">
                   Para poder añadir frutas y verduras a tu carrito de compras y programar tu
-                  entrega a domicilio, necesitas iniciar sesión o crear una cuenta gratuita.
+                  entrega a domicilio en Cali, necesitas iniciar sesión o crear una cuenta gratuita.
                 </p>
               </div>
             </div>
@@ -170,8 +218,8 @@ export default function Catalogo() {
       )}
 
       {loading ? (
-        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((n) => (
+        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((n) => (
             <div
               key={n}
               className="h-80 animate-pulse rounded-3xl border border-gray-100 bg-white p-4 shadow-soft"
@@ -195,12 +243,13 @@ export default function Catalogo() {
           </p>
         </div>
       ) : (
-        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
           {filteredProducts.map((product) => (
             <ProductCard
               key={product.id}
               product={product}
               onRequireAuth={handleRequireAuth}
+              onRequireSucursal={handleRequireSucursal}
             />
           ))}
         </div>

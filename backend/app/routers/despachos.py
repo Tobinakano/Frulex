@@ -18,20 +18,20 @@ from app.schemas.schemas import (
 
 router = APIRouter(prefix="/despachos", tags=["Órdenes de despacho"])
 
-# Flujo de la orden de despacho: cada estado solo puede avanzar al siguiente.
 SIGUIENTE_ESTADO: dict[str, str | None] = {
     "generada": "en_preparacion",
     "en_preparacion": "despachada",
     "despachada": "entregada",
     "entregada": None,
 }
-# Estado que toma el pedido según el avance de su orden de despacho.
 ESTADO_PEDIDO: dict[str, str] = {
     "generada": "en_despacho",
     "en_preparacion": "en_despacho",
     "despachada": "en_camino",
     "entregada": "entregado",
 }
+
+ESTADOS_PENDIENTES_DESPACHO = ("confirmado", "Pendiente de despacho")
 
 solo_personal = requerir_roles("empleado", "gerente")
 
@@ -41,7 +41,7 @@ def _construir_orden(db: Session, orden: OrdenDespacho) -> OrdenDespachoRespuest
     cliente = db.get(Usuario, pedido.usuario_id) if pedido.usuario_id else None
     return OrdenDespachoRespuesta(
         id=orden.id,
-        codigo=f"OD-{orden.id:05d}",
+        codigo=pedido.codigo_seguimiento or f"OD-{orden.id:05d}",
         pedido_id=pedido.id,
         sucursal_id=orden.sucursal_id,
         sucursal_nombre=orden.sucursal.nombre,
@@ -78,14 +78,11 @@ def listar_pedidos_por_despachar(
     db: Session = Depends(get_db),
     _: Usuario = Depends(solo_personal),
 ) -> list[PedidoPorDespacharRespuesta]:
-    """Pedidos confirmados que aún no tienen orden de despacho.
-
-    Con sucursal_id se listan los de esa sucursal y los que no tienen sucursal asignada.
-    """
+    """Pedidos confirmados o pendientes de despacho que aún no tienen orden de despacho."""
     query = (
         select(Pedido)
         .outerjoin(OrdenDespacho, OrdenDespacho.pedido_id == Pedido.id)
-        .where(Pedido.estado == "confirmado", OrdenDespacho.id.is_(None))
+        .where(Pedido.estado.in_(ESTADOS_PENDIENTES_DESPACHO), OrdenDespacho.id.is_(None))
         .order_by(Pedido.id)
     )
     if sucursal_id is not None:
@@ -119,7 +116,7 @@ def generar_orden_despacho(
         raise HTTPException(status_code=404, detail="Pedido no encontrado")
     if db.scalar(select(OrdenDespacho).where(OrdenDespacho.pedido_id == pedido.id)):
         raise HTTPException(status_code=409, detail="El pedido ya tiene una orden de despacho")
-    if pedido.estado != "confirmado":
+    if pedido.estado not in ESTADOS_PENDIENTES_DESPACHO:
         raise HTTPException(
             status_code=400,
             detail=f"Solo se puede despachar un pedido confirmado (estado actual: {pedido.estado})",

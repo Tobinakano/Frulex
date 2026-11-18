@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 class RegistroUsuario(BaseModel):
     nombre: str = Field(min_length=2, max_length=120)
     correo: EmailStr
+    celular: str = Field(default="3000000000", min_length=7, max_length=30)
     password: str = Field(min_length=8, max_length=128)
 
 
@@ -21,6 +22,7 @@ class UsuarioRespuesta(BaseModel):
     id: int
     nombre: str
     correo: EmailStr
+    celular: str | None = None
     rol: str
 
 
@@ -34,6 +36,8 @@ class ProductoBase(BaseModel):
     nombre: str = Field(min_length=2, max_length=160)
     precio: Decimal = Field(gt=0, max_digits=10, decimal_places=2)
     categoria: str = Field(min_length=2, max_length=100)
+    unidad: str = Field(default="libra", max_length=40)
+    stock: int = Field(default=50, ge=0)
     imagen_url: str | None = Field(default=None, max_length=500)
 
 
@@ -45,6 +49,10 @@ class ProductoRespuesta(ProductoBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    precio_oferta: Decimal | None = None
+    en_oferta: bool = False
+    etiqueta_oferta: str | None = None
+    sucursal_id: int | None = None
 
 
 # --- CU-04: Seleccionar sucursal activa ---
@@ -64,15 +72,19 @@ class OfertaRespuesta(BaseModel):
     oferta_id: int
     nombre: str
     categoria: str
+    unidad: str = "libra"
+    stock: int = 0
     imagen_url: str | None = None
     precio_original: Decimal
     precio_oferta: Decimal
+    etiqueta: str = "Oferta por maduración"
     sucursal_id: int
 
 
 # --- CU-09: Seleccionar dirección de entrega ---
 class DireccionCrear(BaseModel):
     alias: str = Field(min_length=2, max_length=60)
+    barrio: str | None = Field(default=None, max_length=120)
     direccion: str = Field(min_length=3, max_length=300)
     ciudad: str = Field(default="Cali", min_length=2, max_length=100)
     referencia: str | None = Field(default=None, max_length=200)
@@ -126,9 +138,10 @@ class ConfirmarB2B(BaseModel):
 
 class ConfirmarB2BRespuesta(BaseModel):
     pedido_id: int
+    codigo_seguimiento: str | None = None
+    estado: str = "Pendiente de despacho"
     mensaje: str
     total: Decimal
-<<<<<<< HEAD
 
 
 # --- CU-07 / CU-08: Carrito de compras (modificar cantidad, eliminar producto) ---
@@ -203,5 +216,3 @@ class OrdenDespachoRespuesta(BaseModel):
     items: list[ItemDespachoRespuesta]
     creado_en: datetime
     actualizado_en: datetime
-=======
->>>>>>> 11a030de30c366ba4ee66fc9c7758137a23b57ba

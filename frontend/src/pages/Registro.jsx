@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Leaf, Lock, Mail, Sparkles, User } from "lucide-react";
+import { ArrowRight, Leaf, Lock, Mail, Phone, Sparkles, User } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 
 export default function Registro() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ nombre: "", correo: "", password: "" });
+  const { login } = useAuth();
+  const [form, setForm] = useState({ nombre: "", correo: "", celular: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -14,8 +16,18 @@ export default function Registro() {
     setLoading(true);
     setError("");
     try {
-      await api.post("/auth/registro", form);
-      navigate("/login");
+      await api.post("/auth/registro", {
+        nombre: form.nombre.trim(),
+        correo: form.correo.trim(),
+        celular: form.celular.trim() || "3000000000",
+        password: form.password,
+      });
+      try {
+        await login(form.correo.trim(), form.password);
+        navigate("/catalogo", { replace: true });
+      } catch {
+        navigate("/login");
+      }
     } catch (err) {
       setError(err.response?.data?.detail || "No se pudo crear la cuenta.");
     } finally {
@@ -36,7 +48,7 @@ export default function Registro() {
           Crear cuenta en Frulex
         </h1>
         <p className="mt-1.5 text-center text-xs font-medium text-gray-500">
-          Regístrate gratis para llenar tu carrito y recibir tus compras a domicilio
+          Regístrate gratis para llenar tu carrito y recibir tus compras a domicilio en Cali
         </p>
 
         {error && (
@@ -57,7 +69,7 @@ export default function Registro() {
                 required
                 minLength={2}
                 type="text"
-                placeholder="Tu nombre"
+                placeholder="Tu nombre completo"
                 value={form.nombre}
                 onChange={(e) => setForm({ ...form, nombre: e.target.value })}
                 className="w-full rounded-2xl border border-gray-200 bg-cream-50/40 py-3 pl-10 pr-4 text-sm font-medium text-gray-900 transition focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
@@ -78,6 +90,26 @@ export default function Registro() {
                 placeholder="tucorreo@ejemplo.com"
                 value={form.correo}
                 onChange={(e) => setForm({ ...form, correo: e.target.value })}
+                className="w-full rounded-2xl border border-gray-200 bg-cream-50/40 py-3 pl-10 pr-4 text-sm font-medium text-gray-900 transition focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              />
+            </div>
+          </label>
+
+          <label className="block text-xs font-bold text-gray-700">
+            Celular en Cali
+            <div className="relative mt-1.5">
+              <Phone
+                size={16}
+                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+              />
+              <input
+                required
+                minLength={7}
+                maxLength={20}
+                type="tel"
+                placeholder="Ej: 315 400 1122"
+                value={form.celular}
+                onChange={(e) => setForm({ ...form, celular: e.target.value })}
                 className="w-full rounded-2xl border border-gray-200 bg-cream-50/40 py-3 pl-10 pr-4 text-sm font-medium text-gray-900 transition focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
               />
             </div>
@@ -113,7 +145,7 @@ export default function Registro() {
 
         <div className="mt-5 flex items-center justify-center gap-1.5 text-[11px] font-medium text-gray-400">
           <Sparkles size={13} className="text-brand-600" />
-          <span>Disfruta ofertas por sucursal y envíos gratis</span>
+          <span>Disfruta ofertas por maduración y envíos express en Cali</span>
         </div>
 
         <div className="mt-5 border-t border-gray-100 pt-4 text-center text-xs text-gray-600">

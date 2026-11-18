@@ -3,6 +3,7 @@ import axios from "axios";
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/api",
   headers: { "Content-Type": "application/json" },
+  withCredentials: true,
 });
 
 api.interceptors.request.use((config) => {
@@ -24,5 +25,13 @@ api.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+export function formatCOP(value) {
+  const numeric = Number(value) || 0;
+  if (numeric >= 100) {
+    return `$${Math.round(numeric).toLocaleString("es-CO")}`;
+  }
+  return `$${numeric.toFixed(2)}`;
+}
 
 export default api;

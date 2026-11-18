@@ -1,3 +1,4 @@
+import uuid
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -8,6 +9,7 @@ from app.core.database import get_db
 from app.models.models import (
     CarritoB2B,
     DetallePedido,
+    InventarioSucursal,
     ItemCarritoB2B,
     Pedido,
     Producto,
@@ -28,11 +30,9 @@ from app.schemas.schemas import (
 
 router = APIRouter(prefix="/carrito-b2b", tags=["Carrito B2B"])
 
-# --- Reglas comerciales B2B (ajustar aquí si cambian) ---
-# Descuento por volumen por producto: (cantidad mínima, % de descuento), de mayor a menor.
+# --- Reglas comerciales B2B ---
 TRAMOS_DESCUENTO: list[tuple[int, int]] = [(100, 15), (50, 10), (10, 5)]
-# Valor mínimo del pedido (ya con descuentos) para poder confirmarlo.
-MINIMO_PEDIDO_B2B = Decimal("100.00")
+MINIMO_PEDIDO_B2B = Decimal("50000.00")
 CANTIDAD_MAXIMA = 100000
 CENTAVOS = Decimal("0.01")
 
@@ -214,14 +214,27 @@ def confirmar_pedido_b2b(
             detail=f"El pedido B2B debe ser de al menos ${resumen.minimo_pedido:.2f} (actual: ${resumen.total:.2f})",
         )
 
+    for item in resumen.items:
+        if datos.sucursal_id is not None:
+            inv = db.scalar(
+                select(InventarioSucursal).where(
+                    InventarioSucursal.producto_id == item.producto_id,
+                    InventarioSucursal.sucursal_id == datos.sucursal_id,
+                )
+            )
+            if inv and inv.stock >= item.cantidad:
+                inv.stock -= item.cantidad
+
+    codigo_uuid = str(uuid.uuid4()).upper()
     pedido = Pedido(
+        codigo_seguimiento=codigo_uuid,
         usuario_id=usuario.id,
         sucursal_id=datos.sucursal_id,
         tipo="b2b",
         direccion_entrega=datos.direccion_entrega.strip(),
         metodo_pago=datos.metodo_pago.strip() or "Pago contra entrega",
         total=resumen.total,
-        estado="confirmado",
+        estado="Pendiente de despacho",
         detalles=[
             DetallePedido(
                 producto_id=item.producto_id,
@@ -239,6 +252,8 @@ def confirmar_pedido_b2b(
     db.refresh(pedido)
     return ConfirmarB2BRespuesta(
         pedido_id=pedido.id,
+        codigo_seguimiento=codigo_uuid,
+        estado=pedido.estado,
         mensaje="Pedido B2B confirmado exitosamente.",
         total=pedido.total,
     )

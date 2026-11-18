@@ -29,6 +29,7 @@ def crear_direccion(
     direccion = Direccion(
         usuario_id=usuario.id,
         alias=datos.alias.strip(),
+        barrio=(datos.barrio or "").strip() or None,
         direccion=datos.direccion.strip(),
         ciudad=datos.ciudad.strip(),
         referencia=(datos.referencia or "").strip() or None,
