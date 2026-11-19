@@ -6,8 +6,8 @@ import { useSucursal } from "../context/SucursalContext";
 import { formatCOP } from "../services/api";
 
 const FALLBACK_IMAGES = {
-  sandía: "https://images.unsplash.com/photo-1587049352847-4a222e784d38?auto=format&fit=crop&w=900&q=80",
-  sandia: "https://images.unsplash.com/photo-1587049352847-4a222e784d38?auto=format&fit=crop&w=900&q=80",
+  sandía: "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7d/Quite_big_watermelon_in_Shandong.jpg/960px-Quite_big_watermelon_in_Shandong.jpg",
+  sandia: "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7d/Quite_big_watermelon_in_Shandong.jpg/960px-Quite_big_watermelon_in_Shandong.jpg",
   tomate: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=900&q=80",
   granadilla: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=900&q=80",
   zanahoria: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&w=900&q=80",
@@ -36,10 +36,13 @@ export default function ProductCard({ product, onRequireAuth, onRequireSucursal 
   const { ofertasPorProducto, sucursalActiva } = useSucursal();
   const oferta = ofertasPorProducto[product.id];
   const [quantity, setQuantity] = useState(1);
+  const [failedImageUrl, setFailedImageUrl] = useState("");
   const [added, setAdded] = useState(false);
   const [branchWarning, setBranchWarning] = useState(false);
 
   const imageUrl = resolveProductImage(product);
+  const fallbackEmoji = /sand[ií]a/i.test(product.nombre || "") ? "🍉" : "🍎";
+  const imageAvailable = imageUrl && failedImageUrl !== imageUrl;
   const unidad = product.unidad || "libra";
   const stockDisponible = Number(oferta?.stock ?? product.stock ?? 50);
   const sinStock = stockDisponible <= 0;
@@ -73,14 +76,15 @@ export default function ProductCard({ product, onRequireAuth, onRequireSucursal 
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-3xl border border-gray-200/80 bg-white shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:border-brand-300/80 hover:shadow-elevated">
       <div className="relative h-52 w-full overflow-hidden bg-gradient-to-br from-brand-50 via-cream-50 to-brand-100/50">
-        {imageUrl ? (
+        {imageAvailable ? (
           <img
             src={imageUrl}
             alt={product.nombre}
             className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+            onError={() => setFailedImageUrl(imageUrl)}
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-5xl">🍎</div>
+          <div className="flex h-full items-center justify-center text-5xl">{fallbackEmoji}</div>
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-60 transition-opacity group-hover:opacity-40" />
 

@@ -14,7 +14,7 @@ CATALOGO_OBLIGATORIO = [
         "categoria": "Frutas",
         "unidad": "libra",
         "stock": 85,
-        "imagen_url": "https://images.unsplash.com/photo-1587049352847-4a222e784d38?auto=format&fit=crop&w=900&q=80",
+        "imagen_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7d/Quite_big_watermelon_in_Shandong.jpg/960px-Quite_big_watermelon_in_Shandong.jpg",
     },
     {
         "nombre": "Tomate",
